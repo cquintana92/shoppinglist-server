@@ -1,0 +1,26 @@
+stages:
+  - release
+
+release:
+  stage: release
+  image: docker:stable
+  services:
+    - docker:dind
+  variables:
+    GORELEASER_IMAGE: goreleaser/goreleaser:latest
+    GITLAB_USER: cquintana92
+    GITLAB_PROJECT: shoppinglist-server
+    GIT_DEPTH: 0
+  only:
+    refs:
+      - tags
+  script: |
+    docker pull $GORELEASER_IMAGE
+
+    docker run --rm --privileged \
+      -v $PWD:/go/src/gitlab.com/$GITLAB_USER/$GITLAB_PROJECT \
+      -w /go/src/gitlab.com/$GITLAB_USER/$GITLAB_PROJECT \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -e GITLAB_TOKEN \
+      $GORELEASER_IMAGE release --rm-dist
+
