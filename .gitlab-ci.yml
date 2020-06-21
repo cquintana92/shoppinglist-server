@@ -7,7 +7,7 @@ release:
   services:
     - docker:dind
   variables:
-    GORELEASER_IMAGE: goreleaser/goreleaser:latest
+    GORELEASER_IMAGE: mailchain/goreleaser-xcgo:latest
     GITLAB_USER: cquintana92
     GITLAB_PROJECT: shoppinglist-server
     GIT_DEPTH: 0
