@@ -1,5 +1,13 @@
 stages:
+  - test 
   - release
+
+test:
+  stage: test
+  image: golang:alpine
+  script:
+    - apk add --update --no-cache gcc sqlite make
+    - make test
 
 release:
   stage: release
