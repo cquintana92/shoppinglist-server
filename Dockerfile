@@ -9,6 +9,7 @@ RUN make build
 FROM alpine:3.10
 
 COPY --from=build /app/bin/shopping-list /shopping-list
+ENV DB_PATH=/shopping.sqlite
+
 ENTRYPOINT [ "/shopping-list" ]
-CMD [ "--dbPath", "/shopping.sqlite" ]
 
