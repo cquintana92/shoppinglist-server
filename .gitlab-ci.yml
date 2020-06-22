@@ -4,9 +4,9 @@ stages:
 
 test:
   stage: test
-  image: golang:alpine
+  image: golang:1.14.4-buster
   script:
-    - apk add --update --no-cache gcc sqlite make
+    - apt-get update && apt-get install -y build-essential sqlite gcc
     - make test
 
 release:
