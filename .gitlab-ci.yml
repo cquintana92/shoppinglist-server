@@ -26,3 +26,24 @@ release:
       -e GITLAB_TOKEN \
       $GORELEASER_IMAGE release --rm-dist
 
+release:docker:
+  stage: release
+  image: docker:stable
+  services:
+    - docker:dind
+  only:
+    refs:
+      - tags
+  script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - echo "CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}"
+    - CI_COMMIT_REF_NAME=`echo "${CI_COMMIT_REF_NAME}" | sed 's:/:-:g'`
+    - echo "CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME}"
+    - IMAGE_NAME="cquintana92/shoppinglist:${CI_COMMIT_REF_NAME}"
+    - LATEST_IMAGE_NAME="cquintana92/shoppinglist:latest"
+    - echo "IMAGE_NAME=${IMAGE_NAME}"
+    - docker build . -t "${IMAGE_NAME}"
+    - docker push "${IMAGE_NAME}"
+    - docker tag "${IMAGE_NAME}" "${LATEST_IMAGE_NAME}"
+    - docker push "${LATEST_IMAGE_NAME}"
+
