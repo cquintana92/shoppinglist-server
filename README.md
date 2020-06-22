@@ -14,7 +14,7 @@ This project has a Makefile that provides an easy way to run standard commands. 
 In order to build it, you can just run `make build`.
 
 ### 1.3. Docker image
-You can find a Docker image in `https://hub.docker.com/r/cquintana92/shoppinglist`.
+You can find a Docker image in [Docker hub](https://hub.docker.com/r/cquintana92/shoppinglist).
 
 ## 2. How to use
 
