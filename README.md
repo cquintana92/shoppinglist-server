@@ -26,16 +26,42 @@ In order to explore the different options, you can run `$ shopping-list --help` 
 ```
 $ shopping-list --help
 GLOBAL OPTIONS:
-   --loglevel value  Log Level [TRACE, DEBUG, INFO, WARN, ERROR] (default: "INFO") [$LOGLEVEL]
-   --dbPath value    (default: "./shopping.sqlite") [$DB_PATH]
-   --port value      (default: 5454) [$PORT]
-   --help, -h        show help
-   --version, -v     print the version
+   --loglevel value        Log Level [TRACE, DEBUG, INFO, WARN, ERROR] (default: "INFO") [$LOGLEVEL]
+   --dbPath value          Path to the SQLITE DB (If it does not exist it will be created) (default: "./shopping.sqlite") [$DB_PATH]
+   --secretEndpoint value  Secret endpoint without authorization (useful for 3rd party integrations) [$SECRET_ENDPOINT]
+   --secretBearer value    Secret bearer authorization in order to secure your server (Header: Authorization: Bearer YOUR_SECRET [$SECRET_BEARER]
+   --port value            Port where the server will listen (default: 5454) [$PORT]
+   --help, -h              show help
+   --version, -v           print the version
 ```
 
 As you can see, the binary has sensible defaults, but you can easily override them via command line flags or environment variables. The default sqlite path is `CWD/shopping.sqlite`. In case the database does not exist, it will be created and initialized.
 
-### 2.2. Docker image
+### 2.2. Securing your server
+
+The server can receive a `secretBearer` parameter which will be used in order to prevent undesired access to your shopping list.
+
+It must be passed to the server in the HTTP requests by setting the `Authorization` header to the following value:
+
+```
+Authorization: Bearer YOUR_SECRET_BEARER
+```
+
+That means, if your secret bearer is "ILikeTrains", your HTTP requests must contain the header:
+
+```
+Authorization: Bearer ILikeTrains
+```
+
+However, there are some third party integrations that do not support setting headers to your requests (such as IFTTT). In order to support these integrations, you can define a secret creation endpoint which does not need any authorization. It can be configured with the `secretEndpoint` parameter. 
+
+That means, if you have set your secret bearer to `ILikeTrains` and your secret endpoint to `iliketrains`, you will be able to create new items by either:
+
+- Sending a POST request with the `Authorization: Bearer ILikeTrains` header (`POST /`).
+- Sending a POST request without authorization (`POST /iliketrains`).
+ 
+
+### 2.3. Docker image
 You can use a docker-compose like the following:
 
 ```yaml
@@ -51,6 +77,8 @@ services:
       LOGLEVEL: INFO
       DB_PATH: "/data/shopping.sqlite"
       PORT: 5454
+      SECRET_ENDPOINT: super_secret_endpoint
+      SECRET_BEARER: my_super_secret
     restart: always
 ```
 

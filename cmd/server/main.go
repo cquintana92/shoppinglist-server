@@ -11,22 +11,28 @@ import (
 
 const (
 	API_PORT int = 5454
+
+	LOG_LEVEL_FLAG       = "loglevel"
+	PORT_FLAG            = "port"
+	DB_PATH_FLAG         = "dbPath"
+	SECRET_ENDPOINT_FLAG = "secretEndpoint"
+	SECRET_BEARER_FLAG   = "secretBearer"
 )
 
 func initLogger(ctx *cli.Context) {
-	logLevel := ctx.GlobalString("loglevel")
+	logLevel := ctx.GlobalString(LOG_LEVEL_FLAG)
 	log.InitLogger(logLevel)
 }
 
 func initStorage(ctx *cli.Context) {
-	dbPath := ctx.GlobalString("dbPath")
+	dbPath := ctx.GlobalString(DB_PATH_FLAG)
 	if err := storage.InitStorage(dbPath); err != nil {
 		log.Logger.Fatalf("Could not create the storage: %+v", err)
 	}
 }
 
-func start(port int) error {
-	return api.Run(port)
+func start(port int, secretEndpoint string, secretBearer string) error {
+	return api.Run(port, secretEndpoint, secretBearer)
 }
 
 func main() {
@@ -35,18 +41,34 @@ func main() {
 	app.Version = constants.VERSION
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:   "loglevel",
+			Name:   LOG_LEVEL_FLAG,
 			Usage:  "Log Level [TRACE, DEBUG, INFO, WARN, ERROR]",
 			EnvVar: "LOGLEVEL",
 			Value:  "INFO",
 		},
 		cli.StringFlag{
-			Name:   "dbPath",
+			Name:   DB_PATH_FLAG,
+			Usage:  "Path to the SQLITE DB (If it does not exist it will be created)",
 			EnvVar: "DB_PATH",
 			Value:  "./shopping.sqlite",
 		},
+		cli.StringFlag{
+			Name:     SECRET_ENDPOINT_FLAG,
+			Usage:    "Secret endpoint without authorization (useful for 3rd party integrations)",
+			EnvVar:   "SECRET_ENDPOINT",
+			Value:    "",
+			Required: false,
+		},
+		cli.StringFlag{
+			Name:     SECRET_BEARER_FLAG,
+			Usage:    "Secret bearer authorization in order to secure your server (Header: Authorization: Bearer YOUR_SECRET",
+			EnvVar:   "SECRET_BEARER",
+			Value:    "",
+			Required: false,
+		},
 		cli.IntFlag{
-			Name:   "port",
+			Name:   PORT_FLAG,
+			Usage:  "Port where the server will listen",
 			EnvVar: "PORT",
 			Value:  API_PORT,
 		},
@@ -54,8 +76,10 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		initLogger(c)
 		initStorage(c)
-		port := c.Int("port")
-		return start(port)
+		port := c.Int(PORT_FLAG)
+		secretEndpoint := c.GlobalString(SECRET_ENDPOINT_FLAG)
+		secretBearer := c.GlobalString(SECRET_BEARER_FLAG)
+		return start(port, secretEndpoint, secretBearer)
 	}
 	err := app.Run(os.Args)
 	if err != nil {

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -10,8 +11,19 @@ import (
 	"shoppinglistserver/storage"
 	"shoppinglistserver/utils"
 	"strconv"
+	"strings"
 	"time"
 )
+
+var (
+	noAuthorizationError        = errors.New("NoAuthorization")
+	badAuthorizationFormatError = errors.New("BadAuthorizationFormat")
+	invalidAuthorizationError   = errors.New("InvalidAuthorization")
+
+	secretBearerAuthorization = ""
+)
+
+type handler func(w http.ResponseWriter, r *http.Request)
 
 type newItem struct {
 	Name string `json:"name"`
@@ -232,15 +244,60 @@ func deleteOne(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Run(port int) error {
+func isBearerCorrect(r *http.Request) error {
+	authorization := r.Header.Get("Authorization")
+	if authorization == "" {
+		return noAuthorizationError
+	}
+
+	if !strings.Contains(authorization, "Bearer ") {
+		return badAuthorizationFormatError
+	}
+
+	withoutBearer := strings.Replace(authorization, "Bearer ", "", -1)
+	if withoutBearer == secretBearerAuthorization {
+		return nil
+	} else {
+		return invalidAuthorizationError
+	}
+}
+
+func withBearer(h handler) handler {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if secretBearerAuthorization != "" {
+			if err := isBearerCorrect(r); err != nil {
+				log.Logger.Errorf("WithBearer failed: %+v", err)
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+		}
+		h(w, r)
+	}
+}
+
+func Run(port int, secretEndpoint string, secretBearer string) error {
+
+	if secretBearer != "" {
+		log.Logger.Info("Secret bearer set")
+		secretBearerAuthorization = secretBearer
+	} else {
+		log.Logger.Warn("Starting API without secret bearer")
+	}
+
 	r := mux.NewRouter()
-	r.HandleFunc("/", getAll).Methods("GET")
-	r.HandleFunc("/", create).Methods("POST")
-	r.HandleFunc("/", deleteAllChecked).Methods("DELETE")
-	r.HandleFunc("/{id}", toggleChecked).Methods("PATCH")
-	r.HandleFunc("/{id}", update).Methods("PUT")
-	r.HandleFunc("/{id}", deleteOne).Methods("DELETE")
-	r.HandleFunc("/{id}/position", updatePosition).Methods("PUT")
+	r.HandleFunc("/", withBearer(getAll)).Methods("GET")
+	r.HandleFunc("/", withBearer(create)).Methods("POST")
+	r.HandleFunc("/", withBearer(deleteAllChecked)).Methods("DELETE")
+	r.HandleFunc("/{id}", withBearer(toggleChecked)).Methods("PATCH")
+	r.HandleFunc("/{id}", withBearer(update)).Methods("PUT")
+	r.HandleFunc("/{id}", withBearer(deleteOne)).Methods("DELETE")
+	r.HandleFunc("/{id}/position", withBearer(updatePosition)).Methods("PUT")
+
+	if secretEndpoint != "" {
+		log.Logger.Info("Secret endpoint set")
+		endpoint := fmt.Sprintf("/%s", secretEndpoint)
+		r.HandleFunc(endpoint, create).Methods("POST")
+	}
 
 	addr := fmt.Sprintf("0.0.0.0:%d", port)
 	srv := &http.Server{
