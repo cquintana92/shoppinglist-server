@@ -15,7 +15,7 @@ BUILD_COMMAND:=${GO} build
 SRC_DIR:=${PROJECT_ROOT}
 
 VERSION=`git describe --tags --always --dirty`
-VERSION_VARIABLE_NAME=temperature-server/constants.VERSION
+VERSION_VARIABLE_NAME=shoppinglistserver/constants.VERSION
 VERSION_VARIABLE_BUILD_FLAG=-ldflags "-X ${VERSION_VARIABLE_NAME}=${VERSION}"
 BUILD_WITH_VERSION_COMMAND=${BUILD_COMMAND} ${VERSION_VARIABLE_BUILD_FLAG}
 
@@ -28,7 +28,7 @@ deps: ## Setup dependencies
 
 .PHONY: build
 build: deps ## Build
-	@ ${BUILD_COMMAND} -o ${BIN_DIRECTORY}/${ARTIFACT_NAME} cmd/server/main.go
+	@ ${BUILD_WITH_VERSION_COMMAND} -o ${BIN_DIRECTORY}/${ARTIFACT_NAME} cmd/server/main.go
 
 .PHONY: build_all
 build_all: build client ## Build all the possible binaries
