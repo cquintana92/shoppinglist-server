@@ -105,8 +105,13 @@ func create(w http.ResponseWriter, r *http.Request) {
 	log.Logger.Infof("Creating item: %s", req.Name)
 	err = storage.New(req.Name)
 	if err != nil {
-		log.Logger.Errorf("Error creating a new record: %+v", err)
-		http.Error(w, "Could not create a record", 500)
+		if err == storage.ItemAlreadyExistsError {
+			log.Logger.Errorf("Item [%s] already exists", req.Name)
+			http.Error(w, "Item already exists", 409)
+		} else {
+			log.Logger.Errorf("Error creating a new record: %+v", err)
+			http.Error(w, "Could not create a record", 500)
+		}
 	} else {
 		respondAll(w, r)
 	}

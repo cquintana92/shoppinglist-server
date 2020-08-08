@@ -3,9 +3,12 @@ package storage
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"shoppinglistserver/log"
 	"shoppinglistserver/utils"
+)
+
+var (
+	ItemAlreadyExistsError = errors.New("ItemAlreadyExists")
 )
 
 func New(name string) error {
@@ -29,7 +32,7 @@ func create(tx *sql.Tx, name string) error {
 		return err
 	}
 	if alreadyAdded {
-		return errors.New(fmt.Sprintf("Element with name %s already present and not checked", name))
+		return ItemAlreadyExistsError
 	}
 	numUnchecked, err := getUncheckedCount(tx)
 	if err != nil {
