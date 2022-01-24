@@ -30,6 +30,8 @@ func retrieveAll(tx *sql.Tx) ([]*ItemDB, error) {
 		return nil, err
 	}
 
+	defer res.Close()
+
 	list := make([]*ItemDB, 0)
 	for res.Next() {
 		item, err := scanItem(res)
@@ -39,6 +41,5 @@ func retrieveAll(tx *sql.Tx) ([]*ItemDB, error) {
 		list = append(list, item)
 	}
 
-	res.Close()
 	return list, nil
 }

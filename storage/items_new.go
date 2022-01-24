@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"shoppinglistserver/log"
 	"shoppinglistserver/utils"
 )
@@ -50,25 +51,53 @@ func create(tx *sql.Tx, name string) error {
 }
 
 func createNew(tx *sql.Tx, name string, numUnchecked int) error {
-	stmt, err := tx.Prepare("INSERT INTO items (name, checked, listOrder, createdAt) VALUES (?, ?, ?, ?)")
-	if err != nil {
-		return err
+	var id int64
+	if databaseMode == dbModeSqlite {
+		stmt, err := prepareStmt(tx, "INSERT INTO items (name, checked, listOrder, createdAt) VALUES (?, ?, ?, ?)")
+		if err != nil {
+			return err
+		}
+
+		res, err := stmt.Exec(name, 0, numUnchecked, utils.Now())
+		if err != nil {
+			return err
+		}
+		id, err = res.LastInsertId()
+		if err != nil {
+			return err
+		}
+	} else {
+		stmt, err := prepareStmt(tx, "INSERT INTO items (name, checked, listOrder, createdAt) VALUES (?, ?, ?, ?) RETURNING id")
+		if err != nil {
+			return err
+		}
+
+		res, err := stmt.Query(name, 0, numUnchecked, utils.Now())
+		if err != nil {
+			return err
+		}
+		defer res.Close()
+		if !res.Next() {
+			return errors.New("query should have returned a row")
+		}
+
+		err = res.Scan(&id)
+		if err != nil {
+			return errors.New(fmt.Sprintf("error scanning created item id row: %+v", err))
+		}
 	}
 
-	res, err := stmt.Exec(name, 0, numUnchecked, utils.Now())
-	if err != nil {
-		return err
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return err
-	}
 	log.Logger.Infof("Created new with ID=%d", id)
 	return nil
 }
 
 func updateRest(tx *sql.Tx) error {
-	_, err := tx.Exec("UPDATE items SET listOrder = listOrder + 1 WHERE checked = 1")
+	stmt, err := prepareStmt(tx, "UPDATE items SET listOrder = listOrder + 1 WHERE checked = ?")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(1)
+
 	return err
 }
 
@@ -78,13 +107,14 @@ func getUncheckedCount(tx *sql.Tx) (int, error) {
 		return 0, err
 	}
 
+	defer r.Close()
+
 	if r.Next() {
 		var count int
 		err = r.Scan(&count)
 		if err != nil {
 			return 0, err
 		}
-		r.Close()
 		return count, nil
 	} else {
 		return 0, errors.New("Query returned 0 rows")

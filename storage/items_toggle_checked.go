@@ -46,7 +46,7 @@ func setAsChecked(tx *sql.Tx, item *ItemDB) error {
 }
 
 func moveAllNextOneUp(tx *sql.Tx, previousPosition int) error {
-	stmt, err := tx.Prepare("UPDATE items SET listOrder = listOrder - 1 WHERE listOrder > ?")
+	stmt, err := prepareStmt(tx, "UPDATE items SET listOrder = listOrder - 1 WHERE listOrder > ?")
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func moveAllNextOneUp(tx *sql.Tx, previousPosition int) error {
 }
 
 func setCheckedAndPosition(tx *sql.Tx, id int, newPosition int, checked int) error {
-	stmt, err := tx.Prepare("UPDATE items SET listOrder = ?, checked = ? WHERE id = ?")
+	stmt, err := prepareStmt(tx, "UPDATE items SET listOrder = ?, checked = ? WHERE id = ?")
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func setAsUnchecked(tx *sql.Tx, item *ItemDB) error {
 }
 
 func moveAllNextOneDown(tx *sql.Tx, previousPosition int, currentId int) error {
-	stmt, err := tx.Prepare("UPDATE items SET listOrder = listOrder + 1 WHERE listOrder > ? AND id <> ?")
+	stmt, err := prepareStmt(tx, "UPDATE items SET listOrder = listOrder + 1 WHERE listOrder > ? AND id <> ?")
 	if err != nil {
 		return err
 	}
@@ -96,10 +96,13 @@ func getMaxChecked(tx *sql.Tx) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	if res.Next() {
 		var max sql.NullInt64
 		err = res.Scan(&max)
+
 		res.Close()
+
 		// Check if returned number or null
 		if max.Valid {
 			return int(max.Int64), nil
@@ -111,10 +114,13 @@ func getMaxChecked(tx *sql.Tx) (int, error) {
 			if err != nil {
 				return 0, err
 			}
+
+			defer res.Close()
+
 			if res.Next() {
 				var max sql.NullInt64
 				err = res.Scan(&max)
-				res.Close()
+
 				if max.Valid {
 					return int(max.Int64), nil
 				} else {
@@ -134,10 +140,13 @@ func getMaxUnchecked(tx *sql.Tx) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	defer res.Close()
+
 	if res.Next() {
 		var max sql.NullInt64
 		err = res.Scan(&max)
-		res.Close()
+
 		if max.Valid {
 			return int(max.Int64), nil
 		} else {

@@ -85,7 +85,7 @@ func moveAllOthers(tx *sql.Tx, oldPosition int, newPosition int) error {
 }
 
 func moveItemsDown(tx *sql.Tx, newPosition int, oldPosition int) error {
-	stmt, err := tx.Prepare("UPDATE ITEMS SET listOrder = listOrder + 1 WHERE listOrder >= ? AND listOrder <= ?")
+	stmt, err := prepareStmt(tx, "UPDATE ITEMS SET listOrder = listOrder + 1 WHERE listOrder >= ? AND listOrder <= ?")
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func moveItemsDown(tx *sql.Tx, newPosition int, oldPosition int) error {
 }
 
 func moveItemsUp(tx *sql.Tx, oldPosition int, newPosition int) error {
-	stmt, err := tx.Prepare("UPDATE ITEMS SET listOrder = listOrder - 1 WHERE listOrder >= ? AND listOrder <= ?")
+	stmt, err := prepareStmt(tx, "UPDATE ITEMS SET listOrder = listOrder - 1 WHERE listOrder >= ? AND listOrder <= ?")
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func moveItemsUp(tx *sql.Tx, oldPosition int, newPosition int) error {
 }
 
 func setNewPosition(tx *sql.Tx, item *ItemDB, newPosition int) error {
-	stmt, err := tx.Prepare("UPDATE items SET listOrder = ? WHERE id = ?")
+	stmt, err := prepareStmt(tx, "UPDATE items SET listOrder = ? WHERE id = ?")
 	if err != nil {
 		return err
 	}

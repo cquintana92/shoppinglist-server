@@ -10,31 +10,28 @@ import (
 	"strings"
 )
 
-func initSqliteStorage(dbUrl string) error {
+func initSqliteStorage(dbUrl string) (*sql.DB, error) {
 	dbPath, err := extractDbPath(dbUrl)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error extracting dbPath: %+v", err))
+		return nil, errors.New(fmt.Sprintf("Error extracting dbPath: %+v", err))
 	}
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error opening sqlite database: %+v", err))
+		return nil, errors.New(fmt.Sprintf("Error opening sqlite database: %+v", err))
 	}
 
 	if _, err := os.Stat(dbUrl); err != nil {
 		if os.IsNotExist(err) {
 			log.Logger.Warnf("DB in [%s] did not exist. Creating it", dbUrl)
 			if err = performSqliteSetup(db); err != nil {
-				return err
+				return nil, err
 			}
 		} else {
-			return err
+			return nil, err
 		}
 	}
 
-	mutex.Lock()
-	defer mutex.Unlock()
-	globalStorage = &Storage{db: db}
-	return nil
+	return db, nil
 }
 
 func extractDbPath(dbUrl string) (string, error) {

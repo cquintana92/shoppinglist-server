@@ -24,7 +24,7 @@ func DeleteOne(id int) error {
 }
 
 func deleteById(tx *sql.Tx, id int) error {
-	stmt, err := tx.Prepare("DELETE FROM items WHERE id = ?")
+	stmt, err := prepareStmt(tx, "DELETE FROM items WHERE id = ?")
 	if err != nil {
 		return err
 	}

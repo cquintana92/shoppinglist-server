@@ -8,13 +8,35 @@ import (
 	"testing"
 )
 
+func getPostgresTestConnection() string {
+	return os.Getenv("TEST_POSTGRES_URL")
+}
+
 func initTest() {
 	log.InitLogger("INFO")
-	storage := "./test.sqlite"
-	_ = os.Remove(storage)
-	err := InitStorage(fmt.Sprintf("sqlite3://%s", storage))
-	if err != nil {
-		panic(err)
+
+	postgresConnection := getPostgresTestConnection()
+	if postgresConnection == "" {
+		// Sqlite test mode
+		storage := "./test.sqlite"
+		_ = os.Remove(storage)
+		err := InitStorage(fmt.Sprintf("sqlite3://%s", storage))
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		// Postgres test mode
+		err := InitStorage("postgresql://postgres:postgres@127.0.0.1:5432/shoppinglist?sslmode=disable")
+		if err != nil {
+			panic(err)
+		}
+		err = WithStorage(func(s *Storage) error {
+			_, err := s.db.Exec("TRUNCATE TABLE items RESTART IDENTITY")
+			return err
+		})
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

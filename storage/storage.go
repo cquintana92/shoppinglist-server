@@ -2,12 +2,23 @@ package storage
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
+	"shoppinglistserver/log"
 	"strings"
 	"sync"
 )
 
+type dbMode int
+
+const (
+	dbModeSqlite dbMode = iota
+	dbModePostgres
+)
+
 var (
 	globalStorage *Storage
+	databaseMode  dbMode
 	mutex         sync.Mutex
 )
 
@@ -16,9 +27,24 @@ type Storage struct {
 }
 
 func InitStorage(dbUrl string) error {
+	db, err := initDb(dbUrl)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error initializing db connection: %+v", err))
+	}
+	mutex.Lock()
+	defer mutex.Unlock()
+	globalStorage = &Storage{db: db}
+	return nil
+}
+
+func initDb(dbUrl string) (*sql.DB, error) {
 	if strings.Contains(dbUrl, "sqlite") {
+		log.Logger.Infof("Using SQLITE backend")
+		databaseMode = dbModeSqlite
 		return initSqliteStorage(dbUrl)
 	} else {
+		databaseMode = dbModePostgres
+		log.Logger.Infof("Using POSTGRESQL backend")
 		return initPostgresqlStorage(dbUrl)
 	}
 }

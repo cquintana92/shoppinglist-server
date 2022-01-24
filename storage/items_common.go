@@ -6,7 +6,7 @@ import (
 )
 
 func findById(tx *sql.Tx, id int) (*ItemDB, error) {
-	stmt, err := tx.Prepare("SELECT * FROM items WHERE id = ?")
+	stmt, err := prepareStmt(tx, "SELECT * FROM items WHERE id = ?")
 	if err != nil {
 		return nil, err
 	}
@@ -14,12 +14,14 @@ func findById(tx *sql.Tx, id int) (*ItemDB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer res.Close()
+
 	if res.Next() {
 		item, err := scanItem(res)
 		if err != nil {
 			return nil, err
 		} else {
-			res.Close()
 			return item, nil
 		}
 	} else {
@@ -28,11 +30,13 @@ func findById(tx *sql.Tx, id int) (*ItemDB, error) {
 }
 
 func getAtPosition(tx *sql.Tx, position int) (*ItemDB, error) {
-	stmt, err := tx.Prepare("SELECT * FROM items WHERE listOrder = ?")
+	stmt, err := prepareStmt(tx, "SELECT * FROM items WHERE listOrder = ?")
 	if err != nil {
 		return nil, err
 	}
 	res, err := stmt.Query(position)
+	defer res.Close()
+
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +45,6 @@ func getAtPosition(tx *sql.Tx, position int) (*ItemDB, error) {
 		if err != nil {
 			return nil, err
 		} else {
-			res.Close()
 			return item, nil
 		}
 	} else {
@@ -54,6 +57,8 @@ func countAll(tx *sql.Tx) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	defer res.Close()
 
 	if res.Next() {
 		var count sql.NullInt64
@@ -72,7 +77,7 @@ func countAll(tx *sql.Tx) (int, error) {
 }
 
 func isItemAddedAndUnchecked(tx *sql.Tx, name string) (bool, error) {
-	stmt, err := tx.Prepare("SELECT COUNT(*) FROM items WHERE name = ? AND checked = false")
+	stmt, err := prepareStmt(tx, "SELECT COUNT(*) FROM items WHERE name = ? AND checked = 0")
 	if err != nil {
 		return false, err
 	}
@@ -81,6 +86,8 @@ func isItemAddedAndUnchecked(tx *sql.Tx, name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	defer res.Close()
 
 	if res.Next() {
 		var count int

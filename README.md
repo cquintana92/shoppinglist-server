@@ -27,7 +27,7 @@ In order to explore the different options, you can run `$ shopping-list --help` 
 $ shopping-list --help
 GLOBAL OPTIONS:
    --loglevel value        Log Level [TRACE, DEBUG, INFO, WARN, ERROR] (default: "INFO") [$LOGLEVEL]
-   --dbPath value          Path to the SQLITE DB (If it does not exist it will be created) (default: "./shopping.sqlite") [$DB_PATH]
+   --dbUrl value           Database URL connection (either sqlite3://PATH_TO_DB or PostgreSQL connection string) [$DB_PATH]
    --secretEndpoint value  Secret endpoint without authorization (useful for 3rd party integrations) [$SECRET_ENDPOINT]
    --secretBearer value    Secret bearer authorization in order to secure your server (Header: Authorization: Bearer YOUR_SECRET [$SECRET_BEARER]
    --port value            Port where the server will listen (default: 5454) [$PORT]
@@ -35,7 +35,9 @@ GLOBAL OPTIONS:
    --version, -v           print the version
 ```
 
-As you can see, the binary has sensible defaults, but you can easily override them via command line flags or environment variables. The default sqlite path is `CWD/shopping.sqlite`. In case the database does not exist, it will be created and initialized.
+As you can see, the binary has sensible defaults, but you can easily override them via command line flags or environment variables.
+
+If you want to use an sqlite database, you will need to set `--dbUrl sqlite3://PATH_TO_THE_DATABASE`. In case the database does not exist, it will be created and initialized.
 
 ### 2.2. Securing your server
 
@@ -75,10 +77,45 @@ services:
       - "./data:/data"
     environment:
       LOGLEVEL: INFO
-      DB_PATH: "/data/shopping.sqlite"
+      DB_URL: "sqlite3:///data/shopping.sqlite"
       PORT: 5454
       SECRET_ENDPOINT: super_secret_endpoint
       SECRET_BEARER: my_super_secret
     restart: always
+```
+
+Or for deploying with postgresql:
+
+```yaml
+version: '3'
+services:
+  # PostgreSQL database
+  postgresql:
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_USER: postgresuser
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: shoppinglistdb
+    volumes:
+      - "postgres_data:/var/lib/postgresql"
+    restart: always
+
+  # Shopping list server
+  shopping:
+    image: cquintana92/shoppinglist:latest
+    ports:
+      - "5454:5454"
+    volumes:
+      - "./data:/data"
+    environment:
+      LOGLEVEL: INFO
+      DB_URL: "postgresql://postgresuser:postgrespassword@postgresql:5432/shoppinglistdb?sslmode=disable"
+      PORT: 5454
+      SECRET_ENDPOINT: super_secret_endpoint
+      SECRET_BEARER: my_super_secret
+    restart: always
+
+volumes:
+  postgres_data:
 ```
 

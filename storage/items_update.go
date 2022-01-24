@@ -24,7 +24,7 @@ func Update(name string, id int) error {
 }
 
 func setName(tx *sql.Tx, name string, id int) error {
-	stmt, err := tx.Prepare("UPDATE items SET name = ? WHERE id = ?")
+	stmt, err := prepareStmt(tx, "UPDATE items SET name = ? WHERE id = ?")
 	if err != nil {
 		return err
 	}

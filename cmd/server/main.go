@@ -14,7 +14,7 @@ const (
 
 	LOG_LEVEL_FLAG       = "loglevel"
 	PORT_FLAG            = "port"
-	DB_PATH_FLAG         = "dbPath"
+	DB_URL_FLAG          = "dbUrl"
 	SECRET_ENDPOINT_FLAG = "secretEndpoint"
 	SECRET_BEARER_FLAG   = "secretBearer"
 )
@@ -25,7 +25,7 @@ func initLogger(ctx *cli.Context) {
 }
 
 func initStorage(ctx *cli.Context) {
-	dbPath := ctx.GlobalString(DB_PATH_FLAG)
+	dbPath := ctx.GlobalString(DB_URL_FLAG)
 	if err := storage.InitStorage(dbPath); err != nil {
 		log.Logger.Fatalf("Could not create the storage: %+v", err)
 	}
@@ -47,10 +47,10 @@ func main() {
 			Value:  "INFO",
 		},
 		cli.StringFlag{
-			Name:   DB_PATH_FLAG,
-			Usage:  "Path to the SQLITE DB (If it does not exist it will be created)",
-			EnvVar: "DB_PATH",
-			Value:  "./shopping.sqlite",
+			Name:     DB_URL_FLAG,
+			Usage:    "Database URL connection (either sqlite3://PATH_TO_DB or PostgreSQL connection string)",
+			EnvVar:   "DB_URL",
+			Required: true,
 		},
 		cli.StringFlag{
 			Name:     SECRET_ENDPOINT_FLAG,
