@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"shoppinglistserver/log"
@@ -11,7 +12,7 @@ func initTest() {
 	log.InitLogger("INFO")
 	storage := "./test.sqlite"
 	_ = os.Remove(storage)
-	err := InitStorage(storage)
+	err := InitStorage(fmt.Sprintf("sqlite3://%s", storage))
 	if err != nil {
 		panic(err)
 	}
