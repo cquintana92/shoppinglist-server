@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"shoppinglistserver/log"
@@ -13,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -267,6 +268,11 @@ func isBearerCorrect(r *http.Request) error {
 	}
 }
 
+func health(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+	w.Write([]byte("Running"))
+}
+
 func withBearer(h handler) handler {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if secretBearerAuthorization != "" {
@@ -290,6 +296,7 @@ func Run(port int, secretEndpoint string, secretBearer string) error {
 	}
 
 	r := mux.NewRouter()
+	r.HandleFunc("/health", health).Methods("GET")
 	r.HandleFunc("/", withBearer(getAll)).Methods("GET")
 	r.HandleFunc("/", withBearer(create)).Methods("POST")
 	r.HandleFunc("/", withBearer(deleteAllChecked)).Methods("DELETE")
