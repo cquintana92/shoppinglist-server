@@ -31,11 +31,19 @@ build: deps ## Build
 	@ ${BUILD_WITH_VERSION_COMMAND} -o ${BIN_DIRECTORY}/${ARTIFACT_NAME} cmd/server/main.go
 
 .PHONY: build_all
-build_all: build client ## Build all the possible binaries
+build_all: build ## Build all the possible binaries
+
+.PHONY: build_cross
+build_cross: ## Build the server for the supported platforms
+	@ for os in linux darwin ; do GOOS=$${os} ${BUILD_WITH_VERSION_COMMAND} -o ${BIN_DIRECTORY}/${ARTIFACT_NAME}-$${os} cmd/server/main.go ; done
 
 .PHONY: fmt
 fmt: ## Apply linting and formatting
 	@ ${GO} fmt ./...
+
+.PHONY: check-fmt
+check-fmt: ## Complain if any file does not comply to format guidelines
+	@ test -z "$(gofmt -s -l $(find . -name '*.go' -type f -print) | tee /dev/stderr)"
 
 .PHONY: test
 test: ## Run tests
