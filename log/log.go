@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	Logger *logrus.Logger
+	Logger *logrus.Logger = NewLogger("INFO")
 )
 
 type myFormatter struct {

@@ -83,6 +83,7 @@ func main() {
 	}
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Logger.Fatal(err)
+		log.Logger.Errorf("Error running the application: %+v", err)
+		os.Exit(1)
 	}
 }
