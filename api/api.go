@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 var (
@@ -69,7 +70,6 @@ func respondAll(w http.ResponseWriter, r *http.Request) {
 			log.Logger.Errorf("Error marshalling to JSON: %+v", err)
 			http.Error(w, "Could not retrieve items", 500)
 		} else {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
 			w.WriteHeader(200)
 			w.Write(bytes)
 		}
@@ -314,7 +314,7 @@ func Run(port int, secretEndpoint string, secretBearer string) error {
 
 	addr := fmt.Sprintf("0.0.0.0:%d", port)
 	srv := &http.Server{
-		Handler: r,
+		Handler: cors.AllowAll().Handler(r),
 		Addr:    addr,
 		// Good practice: enforce timeouts for servers you create!
 		WriteTimeout: 15 * time.Second,
