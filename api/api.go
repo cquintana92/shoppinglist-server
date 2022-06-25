@@ -69,6 +69,9 @@ func respondAll(w http.ResponseWriter, r *http.Request) {
 			log.Logger.Errorf("Error marshalling to JSON: %+v", err)
 			http.Error(w, "Could not retrieve items", 500)
 		} else {
+			if origin := r.Header.Get("Origin"); origin != "" {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+			}
 			w.WriteHeader(200)
 			w.Write(bytes)
 		}
