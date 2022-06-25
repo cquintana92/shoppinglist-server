@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"shoppinglistserver/log"
 	"strings"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func initSqliteStorage(dbUrl string) (*sql.DB, error) {
@@ -20,15 +21,17 @@ func initSqliteStorage(dbUrl string) (*sql.DB, error) {
 		return nil, errors.New(fmt.Sprintf("Error opening sqlite database: %+v", err))
 	}
 
-	if _, err := os.Stat(dbUrl); err != nil {
+	if _, err := os.Stat(dbPath); err != nil {
 		if os.IsNotExist(err) {
-			log.Logger.Warnf("DB in [%s] did not exist. Creating it", dbUrl)
+			log.Logger.Warnf("DB in [%s] did not exist. Creating it", dbPath)
 			if err = performSqliteSetup(db); err != nil {
 				return nil, err
 			}
 		} else {
 			return nil, err
 		}
+	} else {
+		log.Logger.Info("DB already existed")
 	}
 
 	return db, nil
@@ -44,6 +47,13 @@ func extractDbPath(dbUrl string) (string, error) {
 }
 
 func performSqliteSetup(db *sql.DB) error {
+	exists, err := checkIfTableExists(db)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error in startup: %+v", err))
+	}
+	if exists {
+		return nil
+	}
 	sqlStmt := `
 	CREATE TABLE items (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,9 +63,23 @@ func performSqliteSetup(db *sql.DB) error {
         createdAt TEXT NOT NULL
     );
 	`
-	_, err := db.Exec(sqlStmt)
+	_, err = db.Exec(sqlStmt)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func checkIfTableExists(db *sql.DB) (bool, error) {
+	q := "SELECT name FROM sqlite_master WHERE type='table' AND name='items'"
+	res, err := db.Query(q)
+	if err != nil {
+		return false, errors.New(fmt.Sprintf("Error checking if items table exists: %+v", err))
+	}
+	defer res.Close()
+	if res.Next() {
+		return true, nil
+	}
+	return false, nil
+
 }

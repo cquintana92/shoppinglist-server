@@ -4,3 +4,4 @@ bin/
 *.sqlite-journal
 **/*.sqlite
 **/*.sqlite-journal
+*.db
