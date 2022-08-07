@@ -10,48 +10,17 @@ import (
 )
 
 type DialogFlowRequest struct {
-	ResponseId  string `json:"responseId"`
 	QueryResult struct {
 		QueryText  string `json:"queryText"`
 		Parameters struct {
 			Ingredient string `json:"Ingredient"`
 		} `json:"parameters"`
-		AllRequiredParamsPresent bool   `json:"allRequiredParamsPresent"`
-		FulfillmentText          string `json:"fulfillmentText"`
-		FulfillmentMessages      []struct {
-			Text struct {
-				Text []string `json:"text"`
-			} `json:"text"`
-		} `json:"fulfillmentMessages"`
-		OutputContexts []struct {
-			Name       string `json:"name"`
-			Parameters struct {
-				NoInput            float64 `json:"no-input"`
-				NoMatch            float64 `json:"no-match"`
-				Ingredient         string  `json:"Ingredient"`
-				IngredientOriginal string  `json:"Ingredient.original"`
-			} `json:"parameters"`
-		} `json:"outputContexts"`
 		Intent struct {
 			Name           string `json:"name"`
 			DisplayName    string `json:"displayName"`
 			EndInteraction bool   `json:"endInteraction"`
 		} `json:"intent"`
-		IntentDetectionConfidence float64 `json:"intentDetectionConfidence"`
-		LanguageCode              string  `json:"languageCode"`
-		SentimentAnalysisResult   struct {
-			QueryTextSentiment struct {
-				Score     float64 `json:"score"`
-				Magnitude float64 `json:"magnitude"`
-			} `json:"queryTextSentiment"`
-		} `json:"sentimentAnalysisResult"`
 	} `json:"queryResult"`
-	OriginalDetectIntentRequest struct {
-		Source  string `json:"source"`
-		Payload struct {
-		} `json:"payload"`
-	} `json:"originalDetectIntentRequest"`
-	Session string `json:"session"`
 }
 
 type DialogFlowResponse struct {
