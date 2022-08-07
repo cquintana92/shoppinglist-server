@@ -287,7 +287,7 @@ func withBearer(h handler) handler {
 	}
 }
 
-func Run(port int, secretEndpoint string, secretBearer string) error {
+func Run(port int, secretEndpoint string, secretBearer string, dialogFlowEndpoint string) error {
 
 	if secretBearer != "" {
 		log.Logger.Info("Secret bearer set")
@@ -309,7 +309,13 @@ func Run(port int, secretEndpoint string, secretBearer string) error {
 	if secretEndpoint != "" {
 		log.Logger.Info("Secret endpoint set")
 		endpoint := fmt.Sprintf("/%s", secretEndpoint)
-		r.HandleFunc(endpoint, create).Methods("POST")
+		r.HandleFunc(endpoint, create).Methods(http.MethodPost)
+	}
+
+	if dialogFlowEndpoint != "" {
+		log.Logger.Info("DialogFlow endpoint set")
+		endpoint := fmt.Sprintf("/%s", dialogFlowEndpoint)
+		r.HandleFunc(endpoint, dialogFlowHandler).Methods(http.MethodPost)
 	}
 
 	addr := fmt.Sprintf("0.0.0.0:%d", port)

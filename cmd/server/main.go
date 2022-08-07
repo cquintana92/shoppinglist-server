@@ -12,11 +12,12 @@ import (
 const (
 	API_PORT int = 5454
 
-	LOG_LEVEL_FLAG       = "loglevel"
-	PORT_FLAG            = "port"
-	DB_URL_FLAG          = "dbUrl"
-	SECRET_ENDPOINT_FLAG = "secretEndpoint"
-	SECRET_BEARER_FLAG   = "secretBearer"
+	LOG_LEVEL_FLAG           = "loglevel"
+	PORT_FLAG                = "port"
+	DB_URL_FLAG              = "dbUrl"
+	SECRET_ENDPOINT_FLAG     = "secretEndpoint"
+	DIALOGFLOW_ENDPOINT_FLAG = "dialogFlowEndpoint"
+	SECRET_BEARER_FLAG       = "secretBearer"
 )
 
 func initLogger(ctx *cli.Context) {
@@ -31,8 +32,8 @@ func initStorage(ctx *cli.Context) {
 	}
 }
 
-func start(port int, secretEndpoint string, secretBearer string) error {
-	return api.Run(port, secretEndpoint, secretBearer)
+func start(port int, secretEndpoint string, secretBearer string, dialogFlowEndpoint string) error {
+	return api.Run(port, secretEndpoint, secretBearer, dialogFlowEndpoint)
 }
 
 func main() {
@@ -61,8 +62,15 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:     SECRET_BEARER_FLAG,
-			Usage:    "Secret bearer authorization in order to secure your server (Header: Authorization: Bearer YOUR_SECRET",
+			Usage:    "Secret bearer authorization in order to secure your server (Header: Authorization: Bearer YOUR_SECRET)",
 			EnvVar:   "SECRET_BEARER",
+			Value:    "",
+			Required: false,
+		},
+		cli.StringFlag{
+			Name:     DIALOGFLOW_ENDPOINT_FLAG,
+			Usage:    "Endpoint for responding to DialogFlow requests",
+			EnvVar:   "DIALOGFLOW_ENDPOINT",
 			Value:    "",
 			Required: false,
 		},
@@ -79,7 +87,8 @@ func main() {
 		port := c.Int(PORT_FLAG)
 		secretEndpoint := c.GlobalString(SECRET_ENDPOINT_FLAG)
 		secretBearer := c.GlobalString(SECRET_BEARER_FLAG)
-		return start(port, secretEndpoint, secretBearer)
+		dialogFlowEndpoint := c.GlobalString(DIALOGFLOW_ENDPOINT_FLAG)
+		return start(port, secretEndpoint, secretBearer, dialogFlowEndpoint)
 	}
 	err := app.Run(os.Args)
 	if err != nil {
