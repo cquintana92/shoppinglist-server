@@ -1,23 +1,23 @@
 package main
 
 import (
-	"github.com/urfave/cli"
 	"os"
 	"shoppinglistserver/api"
 	"shoppinglistserver/constants"
 	"shoppinglistserver/log"
 	"shoppinglistserver/storage"
+
+	"github.com/urfave/cli"
 )
 
 const (
 	API_PORT int = 5454
 
-	LOG_LEVEL_FLAG           = "loglevel"
-	PORT_FLAG                = "port"
-	DB_URL_FLAG              = "dbUrl"
-	SECRET_ENDPOINT_FLAG     = "secretEndpoint"
-	DIALOGFLOW_ENDPOINT_FLAG = "dialogFlowEndpoint"
-	SECRET_BEARER_FLAG       = "secretBearer"
+	LOG_LEVEL_FLAG       = "loglevel"
+	PORT_FLAG            = "port"
+	DB_URL_FLAG          = "dbUrl"
+	SECRET_ENDPOINT_FLAG = "secretEndpoint"
+	SECRET_BEARER_FLAG   = "secretBearer"
 )
 
 func initLogger(ctx *cli.Context) {
@@ -32,8 +32,8 @@ func initStorage(ctx *cli.Context) {
 	}
 }
 
-func start(port int, secretEndpoint string, secretBearer string, dialogFlowEndpoint string) error {
-	return api.Run(port, secretEndpoint, secretBearer, dialogFlowEndpoint)
+func start(port int, secretEndpoint string, secretBearer string) error {
+	return api.Run(port, secretEndpoint, secretBearer)
 }
 
 func main() {
@@ -67,13 +67,6 @@ func main() {
 			Value:    "",
 			Required: false,
 		},
-		cli.StringFlag{
-			Name:     DIALOGFLOW_ENDPOINT_FLAG,
-			Usage:    "Endpoint for responding to DialogFlow requests",
-			EnvVar:   "DIALOGFLOW_ENDPOINT",
-			Value:    "",
-			Required: false,
-		},
 		cli.IntFlag{
 			Name:   PORT_FLAG,
 			Usage:  "Port where the server will listen",
@@ -87,8 +80,7 @@ func main() {
 		port := c.Int(PORT_FLAG)
 		secretEndpoint := c.GlobalString(SECRET_ENDPOINT_FLAG)
 		secretBearer := c.GlobalString(SECRET_BEARER_FLAG)
-		dialogFlowEndpoint := c.GlobalString(DIALOGFLOW_ENDPOINT_FLAG)
-		return start(port, secretEndpoint, secretBearer, dialogFlowEndpoint)
+		return start(port, secretEndpoint, secretBearer)
 	}
 	err := app.Run(os.Args)
 	if err != nil {
