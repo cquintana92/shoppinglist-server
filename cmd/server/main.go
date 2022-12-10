@@ -32,8 +32,8 @@ func initStorage(ctx *cli.Context) {
 	}
 }
 
-func start(port int, secretEndpoint string, secretBearer string) error {
-	return api.Run(port, secretEndpoint, secretBearer)
+func start(config *api.ApiConfig) error {
+	return api.Run(config)
 }
 
 func main() {
@@ -77,10 +77,13 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		initLogger(c)
 		initStorage(c)
-		port := c.Int(PORT_FLAG)
-		secretEndpoint := c.GlobalString(SECRET_ENDPOINT_FLAG)
-		secretBearer := c.GlobalString(SECRET_BEARER_FLAG)
-		return start(port, secretEndpoint, secretBearer)
+
+		config := &api.ApiConfig{
+			Port:           c.Int(PORT_FLAG),
+			SecretEndpoint: c.GlobalString(SECRET_ENDPOINT_FLAG),
+			SecretBearer:   c.GlobalString(SECRET_BEARER_FLAG),
+		}
+		return start(config)
 	}
 	err := app.Run(os.Args)
 	if err != nil {

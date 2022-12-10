@@ -12,11 +12,17 @@ import (
 
 var secretBearerAuthorization = ""
 
-func Run(port int, secretEndpoint string, secretBearer string) error {
+type ApiConfig struct {
+	Port           int
+	SecretEndpoint string
+	SecretBearer   string
+}
 
-	if secretBearer != "" {
+func Run(config *ApiConfig) error {
+
+	if config.SecretBearer != "" {
 		log.Logger.Info("Secret bearer set")
-		secretBearerAuthorization = secretBearer
+		secretBearerAuthorization = config.SecretBearer
 	} else {
 		log.Logger.Warn("Starting API without secret bearer")
 	}
@@ -31,13 +37,13 @@ func Run(port int, secretEndpoint string, secretBearer string) error {
 	r.HandleFunc("/{id}", withBearer(deleteOne)).Methods(http.MethodDelete)
 	r.HandleFunc("/{id}/position", withBearer(updatePosition)).Methods(http.MethodPut)
 
-	if secretEndpoint != "" {
+	if config.SecretEndpoint != "" {
 		log.Logger.Info("Secret endpoint set")
-		endpoint := fmt.Sprintf("/%s", secretEndpoint)
+		endpoint := fmt.Sprintf("/%s", config.SecretEndpoint)
 		r.HandleFunc(endpoint, create).Methods(http.MethodPost)
 	}
 
-	addr := fmt.Sprintf("0.0.0.0:%d", port)
+	addr := fmt.Sprintf("0.0.0.0:%d", config.Port)
 	srv := &http.Server{
 		Handler: cors.AllowAll().Handler(r),
 		Addr:    addr,
