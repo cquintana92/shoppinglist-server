@@ -119,3 +119,14 @@ volumes:
   postgres_data:
 ```
 
+## 2.4. Replacements
+
+Sometimes, if you are using this server via a smart speaker, there are some words that are not spelt properly (such as names). There is an option, configured via the `--replacements` flag or the `REPLACEMENTS` env variable, that allows you to fix these kind of mistakes.
+
+The format is the following:
+
+```
+export REPLACEMENTS="source=dest,other=word"
+```
+
+The `source` will be tested case-insensitively, while the replacement will be applied as-is.

@@ -1,11 +1,14 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"shoppinglistserver/api"
 	"shoppinglistserver/constants"
 	"shoppinglistserver/log"
 	"shoppinglistserver/storage"
+	"shoppinglistserver/utils"
 
 	"github.com/urfave/cli"
 )
@@ -18,6 +21,7 @@ const (
 	DB_URL_FLAG          = "dbUrl"
 	SECRET_ENDPOINT_FLAG = "secretEndpoint"
 	SECRET_BEARER_FLAG   = "secretBearer"
+	REPLACEMENTS_FLAG    = "replacements"
 )
 
 func initLogger(ctx *cli.Context) {
@@ -73,11 +77,23 @@ func main() {
 			EnvVar: "PORT",
 			Value:  API_PORT,
 		},
+		cli.StringFlag{
+			Name:     REPLACEMENTS_FLAG,
+			Usage:    "String for configuring any needed replacements for fixing third-party spelling mistages (Format: source=dest,c=d)",
+			EnvVar:   "REPLACEMENTS",
+			Value:    "",
+			Required: false,
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		initLogger(c)
 		initStorage(c)
 
+		replacements := c.GlobalString(REPLACEMENTS_FLAG)
+		err := utils.SetReplacements(replacements)
+		if err != nil {
+			return errors.New(fmt.Sprintf("startup error: invalid replacements: %+v", err))
+		}
 		config := &api.ApiConfig{
 			Port:           c.Int(PORT_FLAG),
 			SecretEndpoint: c.GlobalString(SECRET_ENDPOINT_FLAG),

@@ -44,7 +44,7 @@ func update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not create a record", 400)
 		return
 	}
-	req.Name = utils.CapitalizeName(req.Name)
+	req.Name = utils.SanitizeName(req.Name)
 	log.Logger.Debugf("Received id=%d updates=%+v", id, req)
 	err = storage.Update(req.Name, int(id))
 	if err != nil {

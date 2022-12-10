@@ -34,7 +34,7 @@ func create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not create a record", 400)
 		return
 	}
-	req.Name = utils.CapitalizeName(req.Name)
+	req.Name = utils.SanitizeName(req.Name)
 	log.Logger.Debugf("Received %+v", req)
 	log.Logger.Infof("Creating item: %s", req.Name)
 	err = storage.New(req.Name)
