@@ -48,7 +48,11 @@ func parseReplacements(input string) ([]replacement, error) {
 }
 
 func SanitizeName(name string) string {
-	splitted := strings.Split(name, " ")
+	return performSanitize(name, replacements)
+}
+
+func performSanitize(input string, replacements []replacement) string {
+	splitted := strings.Split(input, " ")
 	res := ""
 	for idx, word := range splitted {
 		if idx > 0 {
@@ -56,14 +60,13 @@ func SanitizeName(name string) string {
 		}
 
 		wordAsLower := strings.ToLower(word)
+		wordRes := word
 		for _, replacement := range replacements {
 			if wordAsLower == replacement.from {
-				res += replacement.into
-			} else {
-				res += word
+				wordRes = replacement.into
 			}
 		}
-
+		res += wordRes
 	}
 
 	return CapitalizeName(res)
