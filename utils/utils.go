@@ -32,8 +32,11 @@ func SetReplacements(input string) error {
 }
 
 func parseReplacements(input string) ([]replacement, error) {
-	parts := strings.Split(input, ",")
 	replacements := make([]replacement, 0)
+	if input == "" {
+		return replacements, nil
+	}
+	parts := strings.Split(input, ",")
 	for _, part := range parts {
 		replacementParts := strings.Split(part, "=")
 		if len(replacementParts) != 2 {
