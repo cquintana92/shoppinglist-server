@@ -16,12 +16,14 @@ import (
 const (
 	API_PORT int = 5454
 
-	LOG_LEVEL_FLAG       = "loglevel"
-	PORT_FLAG            = "port"
-	DB_URL_FLAG          = "dbUrl"
-	SECRET_ENDPOINT_FLAG = "secretEndpoint"
-	SECRET_BEARER_FLAG   = "secretBearer"
-	REPLACEMENTS_FLAG    = "replacements"
+	LOG_LEVEL_FLAG        = "loglevel"
+	PORT_FLAG             = "port"
+	DB_URL_FLAG           = "dbUrl"
+	SECRET_ENDPOINT_FLAG  = "secretEndpoint"
+	SECRET_BEARER_FLAG    = "secretBearer"
+	REPLACEMENTS_FLAG     = "replacements"
+	TODOIST_APP_ID_FLAG   = "todoistAppId"
+	TODOIST_ENDPOINT_FLAG = "todoistEndpoint"
 )
 
 func initLogger(ctx *cli.Context) {
@@ -34,6 +36,20 @@ func initStorage(ctx *cli.Context) {
 	if err := storage.InitStorage(dbPath); err != nil {
 		log.Logger.Fatalf("Could not create the storage: %+v", err)
 	}
+}
+
+func getTodoistConfig(ctx *cli.Context) api.TodoistConfig {
+	config := api.TodoistConfig{}
+	appId := ctx.GlobalString(TODOIST_APP_ID_FLAG)
+	endpoint := ctx.GlobalString(TODOIST_ENDPOINT_FLAG)
+
+	if appId != "" && endpoint != "" {
+		config.Enabled = true
+		config.AppId = appId
+		config.Endpoint = endpoint
+	}
+
+	return config
 }
 
 func start(config *api.ApiConfig) error {
@@ -84,6 +100,20 @@ func main() {
 			Value:    "",
 			Required: false,
 		},
+		cli.StringFlag{
+			Name:     TODOIST_APP_ID_FLAG,
+			Usage:    "String containing the Todoist APP ID for enabling todoist integration",
+			EnvVar:   "TODOIST_APP_ID",
+			Value:    "",
+			Required: false,
+		},
+		cli.StringFlag{
+			Name:     TODOIST_ENDPOINT_FLAG,
+			Usage:    "String containing the Todoist endpoint for enabling todoist integration",
+			EnvVar:   "TODOIST_ENDPOINT",
+			Value:    "",
+			Required: false,
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		initLogger(c)
@@ -94,10 +124,12 @@ func main() {
 		if err != nil {
 			return errors.New(fmt.Sprintf("startup error: invalid replacements: %+v", err))
 		}
+
 		config := &api.ApiConfig{
 			Port:           c.Int(PORT_FLAG),
 			SecretEndpoint: c.GlobalString(SECRET_ENDPOINT_FLAG),
 			SecretBearer:   c.GlobalString(SECRET_BEARER_FLAG),
+			TodoistConfig:  getTodoistConfig(c),
 		}
 		return start(config)
 	}
