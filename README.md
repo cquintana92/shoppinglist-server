@@ -130,3 +130,10 @@ export REPLACEMENTS="source=dest,other=word"
 ```
 
 The `source` will be tested case-insensitively, while the replacement will be applied as-is.
+
+## 2.5. Todoist
+
+In case you want to use the Todoist webhook endpoint (such as, integrating it with you Alexa shopping list via the Todoist integration) you can do so y defining the following parameters / env variables:
+
+* `todoistAppId` / `TODOIST_APP_ID`: AppId of your Todoist app. Will be used for verifying the requests.
+* `todoistEndpoint` / `TODOIST_ENDPOINT`: Path to the endpoint you want to use for receiving Todoist requests.

@@ -16,6 +16,7 @@ type ApiConfig struct {
 	Port           int
 	SecretEndpoint string
 	SecretBearer   string
+	TodoistConfig  TodoistConfig
 }
 
 func Run(config *ApiConfig) error {
@@ -41,6 +42,12 @@ func Run(config *ApiConfig) error {
 		log.Logger.Info("Secret endpoint set")
 		endpoint := fmt.Sprintf("/%s", config.SecretEndpoint)
 		r.HandleFunc(endpoint, create).Methods(http.MethodPost)
+	}
+
+	if config.TodoistConfig.Enabled {
+		log.Logger.Info("Todoist endpoint set")
+		endpoint := fmt.Sprintf("/%s", config.TodoistConfig.Endpoint)
+		r.HandleFunc(endpoint, todoist(config.TodoistConfig)).Methods(http.MethodPost)
 	}
 
 	addr := fmt.Sprintf("0.0.0.0:%d", config.Port)
