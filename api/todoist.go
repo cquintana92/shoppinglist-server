@@ -65,8 +65,8 @@ func todoist(config TodoistConfig) func(http.ResponseWriter, *http.Request) {
 		err = storage.New(name)
 		if err != nil {
 			if err == storage.ItemAlreadyExistsError {
-				log.Logger.Errorf("Item [%s] already exists", name)
-				http.Error(w, "Item already exists", 409)
+				log.Logger.Warnf("Item [%s] already exists, but returning OK so we don't get retries", name)
+				respondAll(w, r)
 			} else {
 				log.Logger.Errorf("Error creating a new record: %+v", err)
 				http.Error(w, "Could not create a record", 500)
